@@ -1,9 +1,10 @@
-// routes/api.js (Unified routes for Vercel-compatible single API endpoint)
+// api/index.js (Unified API route entry point for Vercel Hobby plan)
 
 import express from 'express';
+import serverless from 'serverless-http';
 import {
-  loginUser,
   registerUser,
+  loginUser,
   getMe,
   updateMe,
   deleteMe,
@@ -20,25 +21,23 @@ import {
 
 import { getStatsSummary } from '../controllers/statsController.js';
 
-import validateSensorData from '../middlewares/validateSensorData.js';
 import { authenticateToken } from '../middlewares/authenticateToken.js';
+import validateSensorData from '../middlewares/validateSensorData.js';
 
 const app = express();
 
-app.use(express.json()); // Middleware for JSON parsing
+app.use(express.json());
 
 // --- Auth Routes ---
 app.post('/auth/register', registerUser);
 app.post('/auth/login', loginUser);
+app.post('/auth/forgot-password', forgotPassword);
+app.post('/auth/reset-password', resetPassword);
 
-// --- User Profile Routes ---
+// --- Authenticated User Routes ---
 app.get('/auth/me', authenticateToken, getMe);
 app.patch('/auth/me', authenticateToken, updateMe);
 app.delete('/auth/me', authenticateToken, deleteMe);
-
-// --- Password Reset Routes ---
-app.post('/auth/forgot-password', forgotPassword);
-app.post('/auth/reset-password', resetPassword);
 
 // --- Sensor Data Routes ---
 app.post('/data', validateSensorData, createData);
@@ -60,7 +59,7 @@ app.get('/secure-info', authenticateToken, (req, res) => {
   });
 });
 
-// --- Users Route Placeholder ---
+// --- Placeholder ---
 app.get('/users', (req, res) => {
   res.send('respond with a resource');
 });
@@ -70,4 +69,5 @@ app.get('/', (req, res) => {
   res.send('Express on Vercel');
 });
 
-export default app;
+// Export the wrapped app as default for Vercel
+export default serverless(app);
