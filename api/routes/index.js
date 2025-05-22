@@ -1,10 +1,11 @@
 import express from 'express';
 const router = express.Router();
 
-/* GET home page. */
-router.get('/', (req, res, next) => {
-  res.render('index', { title: 'Express' });
-});
+const express = require('express');
+const app = express();
 
-export default router;
+app.get('/', (req, res) => res.send('Express on Vercel'));
 
+app.listen(3000, () => console.log('Server ready on port 3000.'));
+
+module.exports = app;
