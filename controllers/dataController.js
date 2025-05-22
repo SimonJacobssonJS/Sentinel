@@ -1,12 +1,15 @@
 import { SensorData } from '../models/index.js';
 import { Op } from 'sequelize';
 
+const handleError = (res, err, code = 500) =>
+  res.status(code).json({ status: 'error', message: err.message });
+
 // POST /api/data
-const createData = async (req, res) => {
+export const createData = async (req, res) => {
   try {
     const { device_id, timestamp, sensors } = req.body;
 
-    const data = await SensorData.create({
+    await SensorData.create({
       device_id,
       timestamp,
       temperature: sensors.temperature,
@@ -17,20 +20,20 @@ const createData = async (req, res) => {
       noise_level: sensors.noise_level,
       steps: sensors.steps,
       device_battery: sensors.device_battery,
-      watch_battery: sensors.watch_battery
+      watch_battery: sensors.watch_battery,
     });
 
     res.status(201).json({
       status: 'success',
-      message: 'Data saved successfully'
+      message: 'Data saved successfully',
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    handleError(res, err);
   }
 };
 
 // GET /api/data/latest
-const getLatestData = async (req, res) => {
+export const getLatestData = async (req, res) => {
   try {
     const [results] = await SensorData.sequelize.query(`
       SELECT sd.*
@@ -46,12 +49,12 @@ const getLatestData = async (req, res) => {
 
     res.json(results);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    handleError(res, err);
   }
 };
 
 // GET /api/data/:device_id
-const getDeviceData = async (req, res) => {
+export const getDeviceData = async (req, res) => {
   const { device_id } = req.params;
   let { start, end } = req.query;
 
@@ -67,70 +70,65 @@ const getDeviceData = async (req, res) => {
       where: {
         device_id,
         timestamp: {
-          [Op.between]: [start, end]
-        }
+          [Op.between]: [start, end],
+        },
       },
-      order: [['timestamp', 'DESC']]
+      order: [['timestamp', 'DESC']],
     });
 
     res.json(data);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    handleError(res, err);
   }
 };
 
 // GET /api/alerts
-const getAlerts = async (req, res) => {
+export const getAlerts = async (req, res) => {
   try {
     const data = await SensorData.findAll({
       where: {
         [Op.or]: [
           { gas: { [Op.gt]: 1000 } },
           { noise_level: { [Op.gt]: 100 } },
-          { fall_detected: true }
-        ]
+          { fall_detected: true },
+        ],
       },
-      order: [['timestamp', 'DESC']]
+      order: [['timestamp', 'DESC']],
     });
 
-    const alerts = data.map(entry => {
-      if (entry.gas > 1000) {
-        return {
-          device_id: entry.device_id,
-          type: 'gas',
-          value: entry.gas,
-          message: 'High gas level detected',
-          timestamp: entry.timestamp
-        };
-      } else if (entry.noise_level > 100) {
-        return {
-          device_id: entry.device_id,
-          type: 'noise',
-          value: entry.noise_level,
-          message: 'High noise level detected',
-          timestamp: entry.timestamp
-        };
-      } else if (entry.fall_detected) {
-        return {
-          device_id: entry.device_id,
-          type: 'fall',
-          value: null,
-          message: 'Fall detected',
-          timestamp: entry.timestamp
-        };
-      }
-    });
+    const alerts = data
+      .map((entry) => {
+        if (entry.gas > 1000) {
+          return {
+            device_id: entry.device_id,
+            type: 'gas',
+            value: entry.gas,
+            message: 'High gas level detected',
+            timestamp: entry.timestamp,
+          };
+        } else if (entry.noise_level > 100) {
+          return {
+            device_id: entry.device_id,
+            type: 'noise',
+            value: entry.noise_level,
+            message: 'High noise level detected',
+            timestamp: entry.timestamp,
+          };
+        } else if (entry.fall_detected) {
+          return {
+            device_id: entry.device_id,
+            type: 'fall',
+            value: null,
+            message: 'Fall detected',
+            timestamp: entry.timestamp,
+          };
+        }
+        return null;
+      })
+      .filter(Boolean);
 
-    res.json(alerts.filter(Boolean));
+    res.json(alerts);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    handleError(res, err);
   }
 };
-
-export default {
-  createData,
-  getLatestData,
-  getDeviceData,
-  getAlerts
-};
-

@@ -1,18 +1,18 @@
 import { SensorData } from '../models/index.js';
 import { fn, col } from 'sequelize';
 
-const getStatsSummary = async (req, res) => {
+const handleError = (res, err, code = 500) =>
+  res.status(code).json({ status: 'error', message: err.message });
+
+export const getStatsSummary = async (req, res) => {
   try {
-    // Get total number of entries
     const totalEntries = await SensorData.count();
 
-    // Get number of distinct devices
     const deviceCount = await SensorData.count({
       distinct: true,
       col: 'device_id',
     });
 
-    // Get average sensor values
     const averages = await SensorData.findAll({
       attributes: [
         [fn('AVG', col('temperature')), 'avg_temperature'],
@@ -28,13 +28,9 @@ const getStatsSummary = async (req, res) => {
     res.json({
       totalEntries,
       deviceCount,
-      averages: averages[0], // Sequelize returns an array
+      averages: averages[0] || {},
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    handleError(res, err);
   }
-};
-
-export default {
-  getStatsSummary,
 };
