@@ -1,73 +1,49 @@
-// api/index.js (Unified API route entry point for Vercel Hobby plan)
+// models/index.js
+// Centralized Sequelize model loader with proper file:// URLs for dynamic imports
 
-import express from 'express';
-import serverless from 'serverless-http';
-import {
-  registerUser,
-  loginUser,
-  getMe,
-  updateMe,
-  deleteMe,
-  forgotPassword,
-  resetPassword,
-} from '../controllers/authController.js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath, pathToFileURL } from 'url';
+import sequelize from '../config/database.js';
+import { Sequelize, DataTypes } from 'sequelize';
 
-import {
-  createData,
-  getLatestData,
-  getDeviceData,
-  getAlerts,
-} from '../controllers/dataController.js';
+// Resolve __dirname in ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const basename = path.basename(__filename);
 
-import { getStatsSummary } from '../controllers/statsController.js';
+const db = {};
 
-import { authenticateToken } from '../middlewares/authenticateToken.js';
-import validateSensorData from '../middlewares/validateSensorData.js';
+// Dynamically load all model definition files
+const modelFiles = fs
+  .readdirSync(__dirname)
+  .filter(
+    (file) =>
+      file.indexOf('.') !== 0 &&
+      file !== basename &&
+      file.endsWith('.js') &&
+      !file.endsWith('.test.js')
+  );
 
-const app = express();
+for (const file of modelFiles) {
+  const filePath = path.join(__dirname, file);
+  const fileUrl = pathToFileURL(filePath).href;
+  // Import the model definition via a file:// URL
+  const { default: defineModel } = await import(fileUrl);
+  const model = defineModel(sequelize, DataTypes);
+  db[model.name] = model;
+}
 
-app.use(express.json());
+// Apply associations if defined
+for (const modelName of Object.keys(db)) {
+  if (typeof db[modelName].associate === 'function') {
+    db[modelName].associate(db);
+  }
+}
 
-// --- Auth Routes ---
-app.post('/auth/register', registerUser);
-app.post('/auth/login', loginUser);
-app.post('/auth/forgot-password', forgotPassword);
-app.post('/auth/reset-password', resetPassword);
+// Expose Sequelize instance and library
+db.sequelize = sequelize;
+db.Sequelize = Sequelize;
 
-// --- Authenticated User Routes ---
-app.get('/auth/me', authenticateToken, getMe);
-app.patch('/auth/me', authenticateToken, updateMe);
-app.delete('/auth/me', authenticateToken, deleteMe);
-
-// --- Sensor Data Routes ---
-app.post('/data', validateSensorData, createData);
-app.get('/data/latest', getLatestData);
-app.get('/data/:device_id', getDeviceData);
-app.get('/alerts', getAlerts);
-
-// --- Stats Summary Route ---
-app.get('/stats/summary', getStatsSummary);
-
-// --- Secure Info ---
-app.get('/secure-info', authenticateToken, (req, res) => {
-  res.json({
-    message: `This is protected data for ${req.user.username}`,
-    data: {
-      sensorReading: 42,
-      timestamp: new Date().toISOString(),
-    },
-  });
-});
-
-// --- Placeholder ---
-app.get('/users', (req, res) => {
-  res.send('respond with a resource');
-});
-
-// --- Root Route ---
-app.get('/', (req, res) => {
-  res.send('Express on Vercel');
-});
-
-// Export the wrapped app as default for Vercel
-export default serverless(app);
+export default db;
+export const { SensorData } = db;
