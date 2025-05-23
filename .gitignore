@@ -16,3 +16,4 @@ npm-debug.log*
 .vscode/
 .idea/
 .env # om inte redan där
+.vercel

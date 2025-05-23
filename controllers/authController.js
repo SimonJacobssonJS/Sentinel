@@ -1,7 +1,6 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import db from '../models/index.js';
-import { sendResetEmail } from '../utils/mailer.js';
 
 const { User } = db;
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
