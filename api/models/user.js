@@ -1,4 +1,5 @@
 // api/models/user.js
+
 export default (sequelize, DataTypes) => {
   const User = sequelize.define(
     'User',
@@ -8,6 +9,8 @@ export default (sequelize, DataTypes) => {
         autoIncrement: true,
         primaryKey: true,
       },
+
+      // credentials & identity
       username: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -20,46 +23,35 @@ export default (sequelize, DataTypes) => {
       },
       password: {
         type: DataTypes.STRING,
-        allowNull: true, // ok for migration; we’ll backfill
+        allowNull: true, // will backfill and then set false later
       },
+
+      // manual timestamp fields; allow null initially to avoid migration errors
       created_at: {
         type: DataTypes.DATE,
-        allowNull: true, // ok for migration
+        allowNull: true,
         defaultValue: DataTypes.NOW,
       },
       updated_at: {
         type: DataTypes.DATE,
-        allowNull: true, // ok for migration
+        allowNull: true,
         defaultValue: DataTypes.NOW,
       },
     },
     {
       tableName: 'users',
-      timestamps: false, // we manage created_at/updated_at manually
-      underscored: true,
+      timestamps: false, // disable auto timestamps to avoid ALTER on them
+      underscored: true, // keep snake_case column names
       defaultScope: {
         attributes: { exclude: ['password'] },
       },
-      scopes: {
-        withPassword: {
-          // a named scope that includes password
-          attributes: [
-            'id',
-            'username',
-            'email',
-            'password',
-            'created_at',
-            'updated_at',
-          ],
+      hooks: {
+        beforeUpdate: (user) => {
+          user.updated_at = new Date();
         },
       },
     }
   );
-
-  // update updated_at on every save
-  User.addHook('beforeUpdate', (user) => {
-    user.updated_at = new Date();
-  });
 
   return User;
 };
