@@ -26,15 +26,15 @@ export default (sequelize, DataTypes) => {
         allowNull: true, // will backfill and then set false later
       },
 
-      // manual timestamp fields
+      // manual timestamp fields; allow null initially to avoid migration errors
       created_at: {
         type: DataTypes.DATE,
-        allowNull: false,
+        allowNull: true,
         defaultValue: DataTypes.NOW,
       },
       updated_at: {
         type: DataTypes.DATE,
-        allowNull: false,
+        allowNull: true,
         defaultValue: DataTypes.NOW,
       },
     },
