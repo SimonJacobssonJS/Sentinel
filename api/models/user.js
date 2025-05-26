@@ -1,4 +1,5 @@
-// models/user.js
+// api/models/user.js
+
 export default (sequelize, DataTypes) => {
   const User = sequelize.define(
     'User',
@@ -17,29 +18,37 @@ export default (sequelize, DataTypes) => {
       },
       email: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true, // temporarily allow null for existing rows
         unique: true,
-        validate: { isEmail: true },
+        // remove the built-in isEmail validation to prevent migration errors
+        // we'll add stricter validation once the schema is clean
       },
       password: {
-        type: DataTypes.STRING, // store the bcrypt hash here
-        allowNull: false,
+        type: DataTypes.STRING,
+        allowNull: true, // allow existing rows to stay NULL
+      },
+
+      // explicitly allow null timestamps to avoid migration errors
+      created_at: {
+        type: DataTypes.DATE,
+        allowNull: true,
+        defaultValue: DataTypes.NOW,
+      },
+      updated_at: {
+        type: DataTypes.DATE,
+        allowNull: true,
+        defaultValue: DataTypes.NOW,
       },
     },
     {
-      tableName: 'users', // explicit table name
-      timestamps: true, // adds createdAt / updatedAt columns
-      underscored: true, // uses snake_case in DB columns
+      tableName: 'users',
+      timestamps: true, // Sequelize will auto-manage these fields
+      underscored: true, // snake_case column names
       defaultScope: {
-        // hide password unless explicitly requested (e.g. for auth flow)
         attributes: { exclude: ['password'] },
       },
     }
   );
-
-  /* You can add associations here if needed, e.g.
-     User.hasMany(models.SensorData, { foreignKey: 'user_id' });
-  */
 
   return User;
 };
