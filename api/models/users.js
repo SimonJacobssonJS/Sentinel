@@ -22,7 +22,7 @@ export default (sequelize, DataTypes) => {
       },
       password: {
         type: DataTypes.STRING, // store the bcrypt hash here
-        allowNull: false,
+        allowNull: true,
       },
     },
     {
