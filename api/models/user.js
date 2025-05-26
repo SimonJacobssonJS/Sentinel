@@ -18,34 +18,37 @@ export default (sequelize, DataTypes) => {
       },
       email: {
         type: DataTypes.STRING,
-        allowNull: true, // temporarily allow null for existing rows
+        allowNull: false,
         unique: true,
-        // remove the built-in isEmail validation to prevent migration errors
-        // we'll add stricter validation once the schema is clean
       },
       password: {
         type: DataTypes.STRING,
-        allowNull: true, // allow existing rows to stay NULL
+        allowNull: true, // will backfill and then set false later
       },
 
-      // explicitly allow null timestamps to avoid migration errors
+      // manual timestamp fields
       created_at: {
         type: DataTypes.DATE,
-        allowNull: true,
+        allowNull: false,
         defaultValue: DataTypes.NOW,
       },
       updated_at: {
         type: DataTypes.DATE,
-        allowNull: true,
+        allowNull: false,
         defaultValue: DataTypes.NOW,
       },
     },
     {
       tableName: 'users',
-      timestamps: true, // Sequelize will auto-manage these fields
-      underscored: true, // snake_case column names
+      timestamps: false, // disable auto timestamps to avoid ALTER on them
+      underscored: true, // keep snake_case column names
       defaultScope: {
         attributes: { exclude: ['password'] },
+      },
+      hooks: {
+        beforeUpdate: (user) => {
+          user.updated_at = new Date();
+        },
       },
     }
   );
