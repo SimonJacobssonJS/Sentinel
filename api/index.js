@@ -1,59 +1,44 @@
-import express from "express";
-import path from "path";
-import cookieParser from "cookie-parser";
-import logger from "morgan";
-import router from "./routes.js";
-// import usersRouter from "./routes/users.js";
-// import dataRoutes from "./routes/data.js";
-import { fileURLToPath } from "url";
-import { dirname } from "path";
-// import authRoutes from "./routes/auth.js";
-import dotenv from "dotenv";
-import cors from "cors";
+// index.js
+import 'dotenv/config';
+import express from 'express';
+import path from 'path';
+import cookieParser from 'cookie-parser';
+import logger from 'morgan';
+import cors from 'cors';
 
-import sequelize from "./config/database.js";
+import router from './routes.js';
+import sequelize from './config/database.js'; // now sees your env
 
-dotenv.config();
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
-const app = express();
-const PORT = process.env.PORT || 3000; //8766;
-
-// För att kunna använda __dirname i ES Modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Middleware
-app.use(logger("dev"));
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(cors());
 
-// Routers
-app.use("/", router);
-// app.use("/users", usersRouter);
-// app.use("/api", dataRoutes);
-// app.use("/auth", authRoutes);
+app.use('/', router);
 
-// Start server
-
-// Sync Sequelize models with the database
+// Sync & start
 sequelize
-  .sync({ alter: true }) // Use { force: true } if you want to drop and recreate tables
+  .sync({ alter: true })
   .then(() => {
-    // Starta server
-    // server.listen(PORT);
-    // server.on("error", onError);
-    // server.on("listening", onListening);
-
+    console.log('✅ Database synced');
     app.listen(PORT, () => {
-      console.log(`Server is running on http://localhost:${PORT}`);
+      console.log(`🚀 Server running on http://localhost:${PORT}`);
     });
   })
-  .catch((error) => {
-    console.error("Error syncing database:", error);
-    process.exit(1); // Exit if sync fails
+  .catch((err) => {
+    console.error('❌ Failed to sync database:', err);
+    process.exit(1);
   });
 
 export default app;

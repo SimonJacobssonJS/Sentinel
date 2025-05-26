@@ -1,10 +1,11 @@
-import fs from "fs";
-import path from "path";
-import Sequelize from "sequelize";
-import dotenv from "dotenv";
-import { fileURLToPath } from "url";
-import { dirname } from "path";
-import sequelize from "../config/database.js";
+//models/index.js
+import fs from 'fs';
+import path from 'path';
+import Sequelize from 'sequelize';
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import sequelize from '../config/database.js';
 
 dotenv.config();
 
@@ -31,10 +32,10 @@ const modelFiles = fs
   .readdirSync(__dirname)
   .filter(
     (file) =>
-      file.indexOf(".") !== 0 &&
+      file.indexOf('.') !== 0 &&
       file !== basename &&
-      file.slice(-3) === ".js" &&
-      file.indexOf(".test.js") === -1
+      file.slice(-3) === '.js' &&
+      file.indexOf('.test.js') === -1
   );
 
 for (const file of modelFiles) {

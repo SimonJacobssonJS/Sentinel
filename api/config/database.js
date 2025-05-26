@@ -1,40 +1,34 @@
-import { Sequelize } from "sequelize";
-import pg from "pg";
-import dotenv from "dotenv";
+// api/config/database.js
+import 'dotenv/config';
+import { Sequelize } from 'sequelize';
+import pg from 'pg';
 
-dotenv.config(); // Load environment variables from .env file
-// console.log("DATABASE_URL:", process.env.DATABASE_URL);
-const sequelize = new Sequelize(process.env.DATABASE_URL, {
-  dialect: "postgres",
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+  throw new Error('Missing DATABASE_URL environment variable!');
+}
+
+const sequelize = new Sequelize(connectionString, {
+  dialect: 'postgres',
   dialectModule: pg,
   dialectOptions: {
     ssl: {
       require: true,
-      rejectUnauthorized: false, // needed for some Neon deployments
+      rejectUnauthorized: false, // for Neon, Heroku, etc.
     },
   },
-  logging: false,
+  logging: false, // set to console.log for debugging
 });
 
-// const sequelize = new Sequelize({
-//   dialect: "postgres",
-//   dialectModule: pg,
-//   url: process.env.DATABASE_URL
-//   host: process.env.PG_HOST || "localhost",
-//   port: process.env.DB_PORT || 5432,
-//   database: process.env.PGDATABASE || "Sentinel",
-//   username: process.env.PGUSER || "your_pg_user",
-//   password: process.env.PGPASSWORD || "your_pg_password",
-//   logging: false,
-// });
-
+// verify & log
 sequelize
   .authenticate()
   .then(() => {
-    console.log("Connection has been established successfully.");
+    console.log('✅ Database connection established.');
   })
-  .catch((error) => {
-    console.error("Unable to connect to the database:", error);
+  .catch((err) => {
+    console.error('❌ Unable to connect to the database:', err);
+    process.exit(1);
   });
 
 export default sequelize;
