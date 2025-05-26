@@ -1,14 +1,9 @@
 // api/config/database.js
-import 'dotenv/config';
+import 'dotenv/config'; // detta laddar .env direkt
 import { Sequelize } from 'sequelize';
 import pg from 'pg';
-
-const connectionString = process.env.DATABASE_URL;
-if (!connectionString) {
-  throw new Error('Missing DATABASE_URL environment variable!');
-}
-
-const sequelize = new Sequelize(connectionString, {
+console.log('DATABASE_URL:', process.env.DATABASE_URL);
+const sequelize = new Sequelize(process.env.DATABASE_URL, {
   dialect: 'postgres',
   dialectModule: pg,
   dialectOptions: {
@@ -17,18 +12,15 @@ const sequelize = new Sequelize(connectionString, {
       rejectUnauthorized: false, // for Neon, Heroku, etc.
     },
   },
-  logging: false, // set to console.log for debugging
+  logging: false,
 });
-
-// verify & log
 sequelize
   .authenticate()
   .then(() => {
-    console.log('✅ Database connection established.');
+    console.log(':white_check_mark: Database connection established.');
   })
   .catch((err) => {
-    console.error('❌ Unable to connect to the database:', err);
+    console.error(':x: Unable to connect to the database:', err);
     process.exit(1);
   });
-
 export default sequelize;
