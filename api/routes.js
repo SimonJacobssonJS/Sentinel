@@ -1,4 +1,4 @@
-import express from "express";
+import express from 'express';
 import {
   loginUser,
   registerUser,
@@ -7,31 +7,31 @@ import {
   deleteMe,
   forgotPassword,
   resetPassword,
-} from "./controllers/authController.js";
+} from './controllers/authController.js';
 
-import { authenticateToken } from "./middlewares/authenticateToken.js";
+import { authenticateToken } from './middlewares/authenticateToken.js';
 
 const router = express.Router();
 
 // Auth
-// router.post("/auth/register", registerUser);
-// router.post("/auth/login", loginUser);
+router.post('/auth/register', registerUser);
+router.post('/auth/login', loginUser);
 
 // // User profile
-// router.get("/auth/me", authenticateToken, getMe);
-// router.patch("/auth/me", authenticateToken, updateMe);
-// router.delete("/auth/me", authenticateToken, deleteMe);
+//router.get('/auth/me', authenticateToken, getMe);
+//router.patch('/auth/me', authenticateToken, updateMe);
+//router.delete('/auth/me', authenticateToken, deleteMe);
 
 // // Password reset
-// router.post("/auth/forgot-password", forgotPassword);
-// router.post("/auth/reset-password", resetPassword);
+//router.post('/auth/forgot-password', forgotPassword);
+//router.post('/auth/reset-password', resetPassword);
 
 // index
-router.get("/", (req, res) => res.send("Express on Vercel"));
+router.get('/', (req, res) => res.send('Express on Vercel'));
 
 /* GET users listing. */
-router.get("/users", (req, res, next) => {
-  res.send("respond with a resource");
+router.get('/users', (req, res, next) => {
+  res.send('respond with a resource');
 });
 
 export default router;
