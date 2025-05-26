@@ -1,33 +1,35 @@
-import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
-import db from "../models/index.js";
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
+import db from '../models/index.js';
 // import { sendResetEmail } from '../utils/mailer.js';
 
 const { User } = db;
-const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_key";
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
 
 // POST /auth/register
 export const registerUser = async (req, res) => {
   const { username, password, email } = req.body;
+
+  console.log('Registering user:', { username, email, password });
 
   try {
     const userExists = await User.findOne({ where: { username } });
     if (userExists) {
       return res
         .status(400)
-        .json({ status: "error", message: "User already exists" });
+        .json({ status: 'error', message: 'User already exists' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
     await User.create({ username, password: hashedPassword, email });
 
     res.status(201).json({
-      status: "success",
-      message: "User registered successfully",
+      status: 'success',
+      message: 'User registered successfully',
       user: { username },
     });
   } catch (err) {
-    res.status(500).json({ status: "error", error: err.message });
+    res.status(500).json({ status: 'error', error: err.message });
   }
 };
 
@@ -40,25 +42,25 @@ export const loginUser = async (req, res) => {
     if (!user) {
       return res
         .status(400)
-        .json({ status: "error", message: "Invalid credentials" });
+        .json({ status: 'error', message: 'Invalid credentials' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res
         .status(400)
-        .json({ status: "error", message: "Invalid credentials" });
+        .json({ status: 'error', message: 'Invalid credentials' });
     }
 
     const token = jwt.sign(
       { id: user.id, username: user.username },
       JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: '1h' }
     );
 
-    res.json({ status: "success", token });
+    res.json({ status: 'success', token });
   } catch (err) {
-    res.status(500).json({ status: "error", error: err.message });
+    res.status(500).json({ status: 'error', error: err.message });
   }
 };
 
@@ -66,14 +68,14 @@ export const loginUser = async (req, res) => {
 export const getMe = async (req, res) => {
   try {
     const user = await User.findByPk(req.user.id, {
-      attributes: { exclude: ["password"] },
+      attributes: { exclude: ['password'] },
     });
 
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) return res.status(404).json({ message: 'User not found' });
 
-    res.json({ status: "success", user });
+    res.json({ status: 'success', user });
   } catch (err) {
-    res.status(500).json({ status: "error", error: err.message });
+    res.status(500).json({ status: 'error', error: err.message });
   }
 };
 
@@ -84,7 +86,7 @@ export const updateMe = async (req, res) => {
 
   try {
     const user = await User.findByPk(userId);
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) return res.status(404).json({ message: 'User not found' });
 
     if (email) user.email = email;
     if (phone_number) user.phone_number = phone_number;
@@ -97,7 +99,7 @@ export const updateMe = async (req, res) => {
     }
 
     await user.save();
-    res.json({ message: "Profile updated successfully" });
+    res.json({ message: 'Profile updated successfully' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -108,9 +110,9 @@ export const deleteMe = async (req, res) => {
   try {
     const deleted = await User.destroy({ where: { id: req.user.id } });
 
-    if (!deleted) return res.status(404).json({ message: "User not found" });
+    if (!deleted) return res.status(404).json({ message: 'User not found' });
 
-    res.json({ message: "User deleted successfully" });
+    res.json({ message: 'User deleted successfully' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -123,14 +125,14 @@ export const forgotPassword = async (req, res) => {
   try {
     const user = await User.findOne({ where: { email } });
     if (!user)
-      return res.status(404).json({ message: "No user with that email" });
+      return res.status(404).json({ message: 'No user with that email' });
 
     const token = jwt.sign({ id: user.id }, JWT_SECRET, {
-      expiresIn: process.env.RESET_PASSWORD_EXPIRES_IN || "15m",
+      expiresIn: process.env.RESET_PASSWORD_EXPIRES_IN || '15m',
     });
 
     // await sendResetEmail(user.email, token);
-    res.json({ message: "Password reset email sent" });
+    res.json({ message: 'Password reset email sent' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -144,14 +146,14 @@ export const resetPassword = async (req, res) => {
     const decoded = jwt.verify(token, JWT_SECRET);
     const user = await User.findByPk(decoded.id);
 
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) return res.status(404).json({ message: 'User not found' });
 
     const hashed = await bcrypt.hash(newPassword, 10);
     user.password = hashed;
     await user.save();
 
-    res.json({ message: "Password has been reset" });
+    res.json({ message: 'Password has been reset' });
   } catch (err) {
-    res.status(400).json({ message: "Invalid or expired token" });
+    res.status(400).json({ message: 'Invalid or expired token' });
   }
 };
